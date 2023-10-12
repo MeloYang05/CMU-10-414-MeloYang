@@ -2,10 +2,7 @@ import struct
 import numpy as np
 import gzip
 
-try:
-    from simple_ml_ext import *
-except:
-    pass
+from simple_ml_ext import softmax_regression_epoch_cpp
 
 
 def add(x, y):
