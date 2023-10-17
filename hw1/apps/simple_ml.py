@@ -10,7 +10,7 @@ sys.path.append("python/")
 import needle as ndl
 
 
-def parse_mnist(image_filesname, label_filename):
+def parse_mnist(image_filename, label_filename):
     """Read an images and labels file in MNIST format.  See this page:
     http://yann.lecun.com/exdb/mnist/ for a description of the file format.
 
@@ -32,9 +32,25 @@ def parse_mnist(image_filesname, label_filename):
                 labels of the examples.  Values should be of type np.int8 and
                 for MNIST will contain the values 0-9.
     """
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    # Read Iamge File
+    with gzip.open(image_filename, "rb") as images_file:
+        magic_num = int.from_bytes(images_file.read(4), "big")
+        images_num = int.from_bytes(images_file.read(4), "big")
+        rows_num = int.from_bytes(images_file.read(4), "big")
+        cols_num = int.from_bytes(images_file.read(4), "big")
+
+        images_matrix = np.frombuffer(images_file.read(), dtype=np.uint8)
+        images_matrix = images_matrix.astype(np.float32)
+        images_matrix = images_matrix.reshape((images_num, rows_num * cols_num))
+        images_matrix = images_matrix / 255
+
+    # Read Label File
+    with gzip.open(label_filename, "rb") as labels_file:
+        magic_num = int.from_bytes(labels_file.read(4), "big")
+        labels_num = int.from_bytes(labels_file.read(4), "big")
+        labels_array = np.frombuffer(labels_file.read(), dtype=np.uint8)
+
+    return (images_matrix, labels_array)
 
 
 def softmax_loss(Z, y_one_hot):
@@ -53,9 +69,9 @@ def softmax_loss(Z, y_one_hot):
     Returns:
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    z_log_sum_exp = ndl.log(ndl.summation(ndl.exp(Z), axes=(1,)))
+    z_y = ndl.summation(Z * y_one_hot, axes=(1,))
+    return ndl.summation(z_log_sum_exp - z_y) / Z.shape[0]
 
 
 def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
@@ -82,9 +98,18 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
             W2: ndl.Tensor[np.float32]
     """
 
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    for i in range(0, X.shape[0], batch):
+        X_b = ndl.Tensor(X[i : i + batch])
+        Z1 = ndl.relu(ndl.matmul(X_b, W1))
+        Z2 = ndl.matmul(Z1, W2)
+        Y = np.zeros(Z2.shape, np.float32)
+        Y[np.arange(y[i : i + batch].size), y[i : i + batch]] = 1
+        Y_b = ndl.Tensor(Y)
+        loss = softmax_loss(Z2, Y_b)
+        loss.backward()
+        W1 = (W1 - W1.grad * lr).detach()
+        W2 = (W2 - W2.grad * lr).detach()
+    return W1, W2
 
 
 ### CODE BELOW IS FOR ILLUSTRATION, YOU DO NOT NEED TO EDIT

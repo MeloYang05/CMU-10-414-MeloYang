@@ -470,6 +470,7 @@ def test_power_scalar_backward():
         ndl.power_scalar, ndl.Tensor(np.random.randn(5, 4)), scalar=np.random.randint(1)
     )
 
+
 def test_divide_backward():
     gradient_check(
         ndl.divide,

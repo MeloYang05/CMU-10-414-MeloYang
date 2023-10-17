@@ -82,9 +82,9 @@ def softmax_loss(Z, y):
         Average softmax loss over the sample.
     """
     z_log_sum_exp = np.log(np.sum(np.exp(Z), axis=1))
-    z_y = np.zeros(Z.shape[0])
-    for i, k in enumerate(y):
-        z_y[i] = Z[i, k]
+    y_one_hot = np.zeros(Z.shape, np.float32)
+    y_one_hot[np.arange(y.size), y] = 1
+    z_y = np.sum(Z * y_one_hot, axis=1)
     return np.mean(z_log_sum_exp - z_y)
 
 
@@ -110,10 +110,8 @@ def softmax_regression_epoch(X, y, theta, lr=0.1, batch=100):
         X_b = X[i : i + batch]
         h_X_exp = np.exp(np.dot(X_b, theta))
         Z = h_X_exp / np.sum(h_X_exp, axis=1)[:, None]
-
         Y = np.zeros(Z.shape, np.float32)
-        for j in range(batch):
-            Y[j, y[i + j]] = 1
+        Y[np.arange(y[i : i + batch].size), y[i : i + batch]] = 1
         gradients = np.dot(X_b.T, Z - Y) / batch * lr
         theta -= gradients
 
@@ -146,8 +144,7 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
         h_Z1_exp = np.exp(np.dot(Z1, W2))
         Z2 = h_Z1_exp / np.sum(h_Z1_exp, axis=1)[:, None]
         Y = np.zeros(Z2.shape, np.float32)
-        for j in range(batch):
-            Y[j, y[i + j]] = 1
+        Y[np.arange(y[i : i + batch].size), y[i : i + batch]] = 1
         G2 = Z2 - Y
         G1 = np.dot(G2, W2.T) * (Z1 > 0)
         W1_l = np.dot(X_b.T, G1) / batch * lr
