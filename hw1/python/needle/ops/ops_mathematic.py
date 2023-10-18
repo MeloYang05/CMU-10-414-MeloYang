@@ -321,3 +321,18 @@ class ReLU(TensorOp):
 
 def relu(a):
     return ReLU()(a)
+
+
+def max(a):
+    """
+    Get the maximum number of a Tensor, return a scalar.
+
+    Doesn't corresponds to the computation graph.
+
+    Use for numberical stability.
+
+    E.g. float32 cannot store exp(100), so zi = exp(xi)/sum(exp(x)) cannot be computed
+
+    To solve this, we compute zi = exp(xi-c)/sum(exp(x-c)) instead, where c = max(x)
+    """
+    return numpy.max(a.numpy())

@@ -385,7 +385,7 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     # Traverse graph in reverse topological order given the output_node that we are taking gradient wrt.
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
     for node in reverse_topo_order:
-        node.grad = sum(node_to_output_grads_list[node])
+        node.grad = sum_node_list(node_to_output_grads_list[node])
         if node.op is None:
             continue
         input_partial_grads = node.op.gradient_as_tuple(node.grad, node)

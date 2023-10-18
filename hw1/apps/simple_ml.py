@@ -69,9 +69,11 @@ def softmax_loss(Z, y_one_hot):
     Returns:
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
+    # Numerical Stability
+    Z = Z - ndl.max(Z)
     z_log_sum_exp = ndl.log(ndl.summation(ndl.exp(Z), axes=(1,)))
     z_y = ndl.summation(Z * y_one_hot, axes=(1,))
-    return ndl.summation(z_log_sum_exp - z_y) / Z.shape[0]
+    return ndl.summation(z_log_sum_exp - z_y) / np.float32(Z.shape[0])
 
 
 def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
@@ -107,8 +109,10 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
         Y_b = ndl.Tensor(Y)
         loss = softmax_loss(Z2, Y_b)
         loss.backward()
-        W1 = (W1 - W1.grad * lr).detach()
-        W2 = (W2 - W2.grad * lr).detach()
+        # Only update the data of W1 and W2 to avoid add
+        # the reference to previous iteration's computation graph
+        W1.data = W1.data - W1.grad.data * lr
+        W2.data = W2.data - W2.grad.data * lr
     return W1, W2
 
 
